@@ -16,11 +16,8 @@ app.post('/submit-payment', async (expressReq, expressRes) => {
   }
 
   try {
-    // 1. Write data to database first
     await db.createPaymentRequest(utr, amount, regFee);
     
-    // 2. Wrap Telegram broadcast inside its own try/catch block.
-    // If the Telegram API fails, the user request does not throw a 500 error leaving the DB state orphaned/un-retryable.
     try {
       await telegram.sendPaymentNotification(utr, amount, regFee);
     } catch (telegramError) {
@@ -61,4 +58,3 @@ app.get('/check-status', async (expressReq, expressRes) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
 });
-
