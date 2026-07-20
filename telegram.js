@@ -2,7 +2,6 @@ const { Telegraf, Markup } = require('telegraf');
 const db = require('./database');
 require('dotenv').config();
 
-// Environment variables check (Syntax Error Fixed)
 if (!process.env.BOT_TOKEN || !process.env.ADMIN_CHAT_ID) {
   console.error("Critical: Missing Telegram credentials in environment variables.");
   process.exit(1);
@@ -11,7 +10,6 @@ if (!process.env.BOT_TOKEN || !process.env.ADMIN_CHAT_ID) {
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
 
-// Function to send notification with Inline Buttons
 async function sendPaymentNotification(utr, amount, regFee) {
   const message = `⚠️ <b>New Payment Request</b>\n\n` +
                   `• <b>UTR:</b> <code>${utr}</code>\n` +
@@ -19,7 +17,6 @@ async function sendPaymentNotification(utr, amount, regFee) {
                   `• <b>Reg. Fee:</b> ₹${regFee}\n` +
                   `• <b>Status:</b> Pending`;
 
-  // Creating Inline Keyboard Layout
   const keyboard = Markup.inlineKeyboard([
     [
       Markup.button.callback('✅ Approve', `approve_${utr}`),
@@ -27,14 +24,12 @@ async function sendPaymentNotification(utr, amount, regFee) {
     ]
   ]);
 
-  // Sending message with correctly formatted markup
   await bot.telegram.sendMessage(ADMIN_CHAT_ID, message, {
     parse_mode: 'HTML',
     ...keyboard
   });
 }
 
-// Handle Approve Action
 bot.action(/^approve_(.+)$/, async (ctx) => {
   const utr = ctx.match[1];
   try {
@@ -52,7 +47,6 @@ bot.action(/^approve_(.+)$/, async (ctx) => {
   }
 });
 
-// Handle Reject Action
 bot.action(/^reject_(.+)$/, async (ctx) => {
   const utr = ctx.match[1];
   try {
@@ -70,7 +64,6 @@ bot.action(/^reject_(.+)$/, async (ctx) => {
   }
 });
 
-// Bot Launch
 bot.launch()
   .then(() => console.log('🤖 Telegram bot initialized successfully.'))
   .catch((err) => console.error('Failed to start Telegram bot:', err));
