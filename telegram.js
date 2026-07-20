@@ -26,9 +26,9 @@ async function sendPaymentNotification(utr, amount, regFee) {
   ]);
 
   await bot.telegram.sendMessage(ADMIN_CHAT_ID, message, {
-    parse_mode: 'HTML',
-    ...keyboard
-  });
+  parse_mode: 'HTML',
+  reply_markup: keyboard.reply_markup
+});
 }
 
 bot.action(/^approve_(.+)$/, async (ctx) => {
