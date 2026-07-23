@@ -8,53 +8,182 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-app.post('/submit-payment', async (expressReq, expressRes) => {
-  const { utr, amount, regFee } = expressReq.body;
+
+// =========================
+// Submit Payment
+// =========================
+app.post('/submit-payment', async (req, res) => {
+  const { utr, amount, regFee } = req.body;
 
   if (!utr || amount === undefined || regFee === undefined) {
-    return expressRes.status(400).json({ error: 'Missing required parameters: utr, amount, regFee' });
+    return res.status(400).json({
+      error: 'Missing required parameters'
+    });
   }
 
   try {
     await db.createPaymentRequest(utr, amount, regFee);
-    
+
     try {
-      await telegram.sendPaymentNotification(utr, amount, regFee);
-    } catch (telegramError) {
-      console.error('Non-blocking Alert Error: Failed to send Telegram notification:', telegramError);
+      await telegram.sendPaymentNotification(
+        utr,
+        amount,
+        regFee
+      );
+    } catch (e) {
+      console.log(e);
     }
 
-    return expressRes.status(201).json({ success: true, message: 'Payment submitted for approval.' });
+    return res.status(201).json({
+      success: true,
+      message: "Payment submitted successfully."
+    });
+
   } catch (error) {
-    console.error('Submission Error:', error);
-    if (error.code === '23505') { 
-      return expressRes.status(409).json({ error: 'This UTR has already been submitted.' });
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        error: "UTR already exists."
+      });
     }
-    return expressRes.status(500).json({ error: 'Internal server error processing payment request.' });
+
+    return res.status(500).json({
+      error: error.message
+    });
   }
 });
 
-app.get('/check-status', async (expressReq, expressRes) => {
-  const { utr } = expressReq.query;
+
+// =========================
+// Check Status
+// =========================
+app.get('/check-status', async (req, res) => {
+
+  const utr = req.query.utr;
 
   if (!utr) {
-    return expressRes.status(400).json({ error: 'UTR parameter is required.' });
+    return res.status(400).json({
+      error: "UTR required"
+    });
   }
 
   try {
+
     const payment = await db.getPaymentStatus(utr);
 
     if (!payment) {
-      return expressRes.status(404).json({ error: 'UTR not found.' });
+      return res.status(404).json({
+        error: "UTR not found."
+      });
     }
 
-    return expressRes.json({ status: payment.status });
-  } catch (error) {
-    console.error('Status Check Error:', error);
-    return expressRes.status(500).json({ error: 'Internal server error checking status.' });
+    return res.json(payment);
+
+  } catch (e) {
+
+    return res.status(500).json({
+      error: e.message
+    });
+
   }
+
 });
 
+
+// =========================
+// Pending Payments
+// =========================
+app.get('/pending-payments', async (req, res) => {
+
+  try {
+
+    const data = await db.getPendingPayments();
+
+    return res.json(data);
+
+  } catch (e) {
+
+    return res.status(500).json({
+      error: e.message
+    });
+
+  }
+
+});
+
+
+// =========================
+// Approve Payment
+// =========================
+app.post('/approve', async (req, res) => {
+
+  const { utr } = req.body;
+
+  if (!utr) {
+    return res.status(400).json({
+      error: "UTR required"
+    });
+  }
+
+  try {
+
+    await db.updatePaymentStatus(
+      utr,
+      "Approved"
+    );
+
+    return res.json({
+      success: true
+    });
+
+  } catch (e) {
+
+    return res.status(500).json({
+      error: e.message
+    });
+
+  }
+
+});
+
+
+// =========================
+// Reject Payment
+// =========================
+app.post('/reject', async (req, res) => {
+
+  const { utr } = req.body;
+
+  if (!utr) {
+    return res.status(400).json({
+      error: "UTR required"
+    });
+  }
+
+  try {
+
+    await db.updatePaymentStatus(
+      utr,
+      "Rejected"
+    );
+
+    return res.json({
+      success: true
+    });
+
+  } catch (e) {
+
+    return res.status(500).json({
+      error: e.message
+    });
+
+  }
+
+});
+
+
 app.listen(PORT, () => {
+
   console.log(`🚀 Server listening on port ${PORT}`);
+
 });
