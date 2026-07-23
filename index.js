@@ -13,16 +13,26 @@ app.use(express.json());
 // Submit Payment
 // =========================
 app.post('/submit-payment', async (req, res) => {
-  const { utr, amount, regFee } = req.body;
 
-  if (!utr || amount === undefined || regFee === undefined) {
+  const { utr } = req.body;
+
+  if (!utr) {
     return res.status(400).json({
-      error: 'Missing required parameters'
+      error: "UTR required"
     });
   }
 
   try {
-    await db.createPaymentRequest(utr, amount, regFee);
+
+    // Amount aur Registration Fee fix hai
+    const amount = "499";
+    const regFee = "499";
+
+    await db.createPaymentRequest(
+      utr,
+      amount,
+      regFee
+    );
 
     try {
       await telegram.sendPaymentNotification(
@@ -50,7 +60,9 @@ app.post('/submit-payment', async (req, res) => {
     return res.status(500).json({
       error: error.message
     });
+
   }
+
 });
 
 
@@ -59,7 +71,7 @@ app.post('/submit-payment', async (req, res) => {
 // =========================
 app.get('/check-status', async (req, res) => {
 
-  const utr = req.query.utr;
+  const { utr } = req.query;
 
   if (!utr) {
     return res.status(400).json({
@@ -180,7 +192,6 @@ app.post('/reject', async (req, res) => {
   }
 
 });
-
 
 app.listen(PORT, () => {
 
