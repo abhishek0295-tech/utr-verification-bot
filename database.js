@@ -12,21 +12,33 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 module.exports = {
+
+  // Create Payment Request
   async createPaymentRequest(utr, amount, regFee) {
     const { data, error } = await supabase
       .from('payments')
-      .insert([{ utr, amount, reg_fee: regFee, status: 'Pending' }])
+      .insert([
+        {
+          utr: utr,
+          amount: amount,
+          reg_fee: regFee,
+          status: 'Pending'
+        }
+      ])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
 
+  // Update Payment Status
   async updatePaymentStatus(utr, status) {
     const { data, error } = await supabase
       .from('payments')
-      .update({ status })
+      .update({
+        status: status
+      })
       .eq('utr', utr)
       .select()
       .single();
@@ -35,14 +47,28 @@ module.exports = {
     return data;
   },
 
+  // Check Payment Status
   async getPaymentStatus(utr) {
     const { data, error } = await supabase
       .from('payments')
       .select('status')
       .eq('utr', utr)
-      .maybeSingle(); // Prevents PGRST116 throw on empty results, returning null cleanly
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Get All Pending Payments
+  async getPendingPayments() {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('status', 'Pending')
+      .order('id', { ascending: false });
 
     if (error) throw error;
     return data;
   }
+
 };
