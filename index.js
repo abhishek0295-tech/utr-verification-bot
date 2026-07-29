@@ -43,7 +43,7 @@ app.post('/submit-payment', async (req, res) => {
         regFee
       );
     } catch (e) {
-      console.log(e);
+    console.error("Telegram Error:", e);
     }
 
     return res.status(201).json({
