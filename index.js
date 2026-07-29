@@ -116,7 +116,6 @@ app.get('/pending-payments', async (req, res) => {
   }
 
 });
-
 // =========================
 // Approve Payment
 // =========================
@@ -126,7 +125,21 @@ app.post('/approve', async (req, res) => {
   console.log("Headers:", req.headers);
   console.log("Body:", req.body);
 
-  const utr = req.body.utr || req.body["utr"];
+  let utr = req.body.utr || req.body["utr"];
+
+  // Kodular JSON fallback
+  if (!utr) {
+    const key = Object.keys(req.body)[0];
+
+    if (key) {
+      try {
+        const parsed = JSON.parse(key);
+        utr = parsed.utr;
+      } catch (err) {
+        console.log("JSON Parse Error:", err.message);
+      }
+    }
+  }
 
   if (!utr) {
     return res.status(400).json({
@@ -136,7 +149,10 @@ app.post('/approve', async (req, res) => {
 
   try {
 
-    await db.updatePaymentStatus(utr, "Approved");
+    await db.updatePaymentStatus(
+      utr,
+      "Approved"
+    );
 
     return res.json({
       success: true,
@@ -153,12 +169,27 @@ app.post('/approve', async (req, res) => {
 
 });
 
+
 // =========================
 // Reject Payment
 // =========================
 app.post('/reject', async (req, res) => {
 
-  const utr = req.body.utr || req.body["utr"];
+  let utr = req.body.utr || req.body["utr"];
+
+  // Kodular JSON fallback
+  if (!utr) {
+    const key = Object.keys(req.body)[0];
+
+    if (key) {
+      try {
+        const parsed = JSON.parse(key);
+        utr = parsed.utr;
+      } catch (err) {
+        console.log("JSON Parse Error:", err.message);
+      }
+    }
+  }
 
   if (!utr) {
     return res.status(400).json({
@@ -168,7 +199,10 @@ app.post('/reject', async (req, res) => {
 
   try {
 
-    await db.updatePaymentStatus(utr, "Rejected");
+    await db.updatePaymentStatus(
+      utr,
+      "Rejected"
+    );
 
     return res.json({
       success: true,
@@ -183,8 +217,4 @@ app.post('/reject', async (req, res) => {
 
   }
 
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
 });
