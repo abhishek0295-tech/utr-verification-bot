@@ -6,11 +6,14 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.post('/approve', async (req, res) => {
+// Body Parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  console.log("===== APPROVE =====");
-  console.log("Headers:", req.headers);
-  console.log("Body:", req.body);
+// =========================
+// Submit Payment
+// =========================
+app.post('/submit-payment', async (req, res) => {
 
   const utr = req.body.utr || req.body["utr"];
 
@@ -20,34 +23,12 @@ app.post('/approve', async (req, res) => {
     });
   }
 
-  // baaki code waise hi rahega...
-});
-
-
-// =========================
-// Submit Payment
-// =========================
-app.post('/submit-payment', async (req, res) => {
-
-  const { utr } = req.body;
-
-  if (!utr) {
-    return res.status(400).json({
-      error: "UTR required"
-    });
-  }
-
   try {
 
-    // Amount aur Registration Fee fix hai
     const amount = "499";
     const regFee = "499";
 
-    await db.createPaymentRequest(
-      utr,
-      amount,
-      regFee
-    );
+    await db.createPaymentRequest(utr, amount, regFee);
 
     try {
       await telegram.sendPaymentNotification(
@@ -80,13 +61,12 @@ app.post('/submit-payment', async (req, res) => {
 
 });
 
-
 // =========================
 // Check Status
 // =========================
 app.get('/check-status', async (req, res) => {
 
-  const { utr } = req.query;
+  const utr = req.query.utr;
 
   if (!utr) {
     return res.status(400).json({
@@ -116,7 +96,6 @@ app.get('/check-status', async (req, res) => {
 
 });
 
-
 // =========================
 // Pending Payments
 // =========================
@@ -138,7 +117,6 @@ app.get('/pending-payments', async (req, res) => {
 
 });
 
-
 // =========================
 // Approve Payment
 // =========================
@@ -148,7 +126,7 @@ app.post('/approve', async (req, res) => {
   console.log("Headers:", req.headers);
   console.log("Body:", req.body);
 
-  const { utr } = req.body;
+  const utr = req.body.utr || req.body["utr"];
 
   if (!utr) {
     return res.status(400).json({
@@ -158,13 +136,11 @@ app.post('/approve', async (req, res) => {
 
   try {
 
-    await db.updatePaymentStatus(
-      utr,
-      "Approved"
-    );
+    await db.updatePaymentStatus(utr, "Approved");
 
     return res.json({
-      success: true
+      success: true,
+      message: "Payment approved successfully"
     });
 
   } catch (e) {
@@ -177,13 +153,12 @@ app.post('/approve', async (req, res) => {
 
 });
 
-
 // =========================
 // Reject Payment
 // =========================
 app.post('/reject', async (req, res) => {
 
-  const { utr } = req.body;
+  const utr = req.body.utr || req.body["utr"];
 
   if (!utr) {
     return res.status(400).json({
@@ -193,13 +168,11 @@ app.post('/reject', async (req, res) => {
 
   try {
 
-    await db.updatePaymentStatus(
-      utr,
-      "Rejected"
-    );
+    await db.updatePaymentStatus(utr, "Rejected");
 
     return res.json({
-      success: true
+      success: true,
+      message: "Payment rejected successfully"
     });
 
   } catch (e) {
@@ -213,7 +186,5 @@ app.post('/reject', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-
   console.log(`🚀 Server listening on port ${PORT}`);
-
 });
