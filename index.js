@@ -214,7 +214,11 @@ app.post('/reject', async (req, res) => {
     return res.status(500).json({
       error: e.message
     });
+    
 
   }
 
+});
+app.listen(PORT, () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
 });
