@@ -129,6 +129,10 @@ app.get('/pending-payments', async (req, res) => {
 // =========================
 app.post('/approve', async (req, res) => {
 
+  console.log("===== APPROVE =====");
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+
   const { utr } = req.body;
 
   if (!utr) {
