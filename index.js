@@ -6,8 +6,22 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.post('/approve', async (req, res) => {
+
+  console.log("===== APPROVE =====");
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+
+  const utr = req.body.utr || req.body["utr"];
+
+  if (!utr) {
+    return res.status(400).json({
+      error: "UTR required"
+    });
+  }
+
+  // baaki code waise hi rahega...
+});
 
 
 // =========================
