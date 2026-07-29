@@ -6,7 +6,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// =========================
 // Body Parsers
+// =========================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -28,7 +30,11 @@ app.post('/submit-payment', async (req, res) => {
     const amount = "499";
     const regFee = "499";
 
-    await db.createPaymentRequest(utr, amount, regFee);
+    await db.createPaymentRequest(
+      utr,
+      amount,
+      regFee
+    );
 
     try {
       await telegram.sendPaymentNotification(
@@ -129,11 +135,11 @@ app.post('/approve', async (req, res) => {
 
   // Kodular JSON fallback
   if (!utr) {
-    const key = Object.keys(req.body)[0];
+    const keys = Object.keys(req.body);
 
-    if (key) {
+    if (keys.length > 0) {
       try {
-        const parsed = JSON.parse(key);
+        const parsed = JSON.parse(keys[0]);
         utr = parsed.utr;
       } catch (err) {
         console.log("JSON Parse Error:", err.message);
@@ -149,10 +155,7 @@ app.post('/approve', async (req, res) => {
 
   try {
 
-    await db.updatePaymentStatus(
-      utr,
-      "Approved"
-    );
+    await db.updatePaymentStatus(utr, "Approved");
 
     return res.json({
       success: true,
@@ -169,21 +172,24 @@ app.post('/approve', async (req, res) => {
 
 });
 
-
 // =========================
 // Reject Payment
 // =========================
 app.post('/reject', async (req, res) => {
 
+  console.log("===== REJECT =====");
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+
   let utr = req.body.utr || req.body["utr"];
 
   // Kodular JSON fallback
   if (!utr) {
-    const key = Object.keys(req.body)[0];
+    const keys = Object.keys(req.body);
 
-    if (key) {
+    if (keys.length > 0) {
       try {
-        const parsed = JSON.parse(key);
+        const parsed = JSON.parse(keys[0]);
         utr = parsed.utr;
       } catch (err) {
         console.log("JSON Parse Error:", err.message);
@@ -199,26 +205,26 @@ app.post('/reject', async (req, res) => {
 
   try {
 
-    await db.updatePaymentStatus(
-      utr,
-      "Rejected"
-    );
+    await db.updatePaymentStatus(utr, "Rejected");
 
     return res.json({
-      success: true,
-      message: "Payment rejected successfully"
-    });
+  success: true,
+  message: "Payment rejected successfully"
+});
 
-  } catch (e) {
+} catch (e) {
 
-    return res.status(500).json({
-      error: e.message
-    });
-    
+  return res.status(500).json({
+    error: e.message
+  });
 
-  }
+}
 
 });
+
+// =========================
+// Start Server
+// =========================
 app.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
 });
