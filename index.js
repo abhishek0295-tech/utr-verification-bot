@@ -17,13 +17,31 @@ app.use(express.urlencoded({ extended: true }));
 // =========================
 app.post('/submit-payment', async (req, res) => {
 
-  const utr = req.body.utr || req.body["utr"];
+console.log("===== SUBMIT PAYMENT =====");
+console.log("Headers:", req.headers);
+console.log("Body:", req.body);
 
-  if (!utr) {
-    return res.status(400).json({
-      error: "UTR required"
-    });
+let utr = req.body.utr || req.body["utr"];
+
+// Kodular fallback
+if (!utr) {
+  const keys = Object.keys(req.body);
+
+  if (keys.length > 0) {
+    try {
+      const parsed = JSON.parse(keys[0]);
+      utr = parsed.utr;
+    } catch (err) {
+      console.log("JSON Parse Error:", err.message);
+    }
   }
+}
+
+if (!utr) {
+  return res.status(400).json({
+    error: "UTR required"
+  });
+}
 
   try {
 
